@@ -5,7 +5,7 @@ typedef enum { str, num } Type;
 
 typedef union
 {
-    char* s;
+    char s[20];
     int i;
 } Value;
 

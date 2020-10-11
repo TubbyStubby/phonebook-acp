@@ -59,9 +59,81 @@ void drawBox(const Box* box, int w, int h, COORD stpos)
     gotoxy(stpos);
 }
 
+void clearBox(int w, int h, COORD stpos)
+{
+    gotoxy(stpos);
+    COORD cc = stpos;
+    short dir=1, axs=0;
+    do
+    {
+        gotoxy(cc);
+        
+        if(cc.X == stpos.X + w - 1 && cc.Y == stpos.Y) axs = 1;
+        else if(cc.X == stpos.X && cc.Y == stpos.Y + h -1) axs = 1;
+        else if(cc.X == stpos.X + w -1 && cc.Y == stpos.Y + h - 1) 
+        {
+            axs = 0;
+            dir = -1;
+        }
+
+        pchar(' ');
+        
+        if(axs == 0) cc.X+=dir;
+        else cc.Y+=dir;
+    } while (cc.X != stpos.X || cc.Y != stpos.Y);
+}
+
 FormData* form(char** labels, int n, COORD pos)
 {
+    short labelW = 15, inputW = 15;
     
+    drawBox(&slBox, 33, n*2+3, pos);
+    for(int i = 0; i < n; ++i)
+    {
+        gotoxy(_cord(pos.X + 1, pos.Y + 2*(i+1)));
+        printf(*labels);
+        labels++;
+    }
+    vLine(_cord(pos.X+10, pos.Y+1), n*2+1);
+
+    FormData *f = (FormData*)malloc(sizeof(FormData)*n);
+
+    for(int i=0; i<n; ++i)
+    {
+        gotoxy(_cord(pos.X+11, pos.Y+1+i*2));
+        drawBox(&slBox, 15, 3, wherexy());
+        f[i].t = str;
+        xinput(f[i].data.s);
+        clearBox(15, 3, _cord(pos.X+11, pos.Y+1+i*2));
+    }
+
+    gotoxy(pos);
+    for(int i=0; i<n*2+3; ++i) {
+        for(int j=0; j<33; ++j) {
+            gotoxy(_cord(pos.X + j, pos.Y + i));
+            pchar(' ');
+        }
+    }
+
+    return f;
+}
+
+void vLine(COORD pos, int sz)
+{
+    for(int i=0; i<sz; ++i)
+    {
+        gotoxy(_cord(pos.X, pos.Y+i));
+        pchar(slBox.v);
+    }
+}
+
+void hLine(COORD pos, int sz)
+{
+    for(int i=0; i<sz; ++i)
+    {
+        gotoxy(_cord(pos.X+i, pos.Y));
+        pchar(slBox.h);
+    }
 }
 
 void freeRoam()

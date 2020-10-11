@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include "helper.h"
 #define pchar(x) printf("%c", x)
+#define _cord(x,y) (COORD){x,y} //short hand for new COORD
 
 //stores form data which can either be string or integer
 typedef struct
@@ -45,16 +46,20 @@ note: w, h should be atleast 3 to get a usable space of 1 block
 */
 void drawBox(const Box*, int, int, COORD);
 
+/*
+clears the box of given width and height
+*/
+void clearBox(int, int, COORD);
+
 //just for fun hehe and testing
 void freeRoam(void);
 
 /*
-Pending
-    takes 2d array consisting of multiple strings which are labels
-    int which is no. of labels
-    and coords where the form is to be made
+takes 2d array consisting of multiple strings which are labels
+int which is no. of labels
+and coords where the form is to be made
 */
-FormData* form(char**, int, COORD);
+FormData* form(char**, int, COORD); //change to formdata
 
 /*
 return string ending with \n
@@ -62,11 +67,14 @@ without going to new line
 */
 void xinput(char*);
 
+//makes a vertical line
+void vLine(COORD, int);
+//makes a horizontal line
+void hLine(COORD, int);
+
 //standard box with double line
 extern const Box dlBox;
 //standard box with single line
 extern const Box slBox;
 
 #endif //CMISC_H
-
-//enter is 13 with _getch
