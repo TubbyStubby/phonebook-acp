@@ -10,10 +10,11 @@ typedef struct
     struct Contact *prev;
 } Contact;
 
-typedef struct
+typedef struct CLink
 {
     Contact *c;
-    DLL link;
+    struct CLink *next;
+    struct CLink *prev;
 } CLink;
 
 typedef struct TrieNode
@@ -25,8 +26,14 @@ typedef struct TrieNode
 } TNode;
 
 short addContact(char**, int, TNode*,COORD);
+
+//searches and reutrns a contact
 Contact* search(TNode*);
-int getN(int, TNode*, COORD);
+
+//returns circular ll
+CLink* trieWalk(TNode*);
+
+void freeCL(CLink*);
 
 int main()
 {
@@ -79,7 +86,8 @@ int main()
                 break;
             case 4:
                 gotoxy(_cord(12,1));
-                search(&root);
+                Contact *ct = search(&root);
+                if(ct != NULL) printf("%s, %s, %s", ct->name, ct->address, ct->mobile);
                 break;
             default:
                 break;
@@ -135,61 +143,153 @@ short addContact(char **l, int n, TNode *root, COORD cord)
 
 Contact* search(TNode *root)
 {
-    short w=40, h=20;
+    short w=30, h=15;
     COORD pos = wherexy();
     drawBox(&slBox, w, h, pos);
     drawBox(&slBox, w-2, 3, wherexy());
+    COORD in_cord = wherexy();
     drawBox(&slBox, w-2, h-5, _cord(pos.X+1, pos.Y+4));
+    COORD out_cord = wherexy();
 
-    gotoxy(_cord(pos.X+3, pos.Y+2));
+    gotoxy(in_cord);
 
     char c;
-    short x = 0;
+    short x = 0, windo = 5; //for display
+    CLink *cl = NULL;
     while (1)
     {
         c = _getch();
-        COORD tco;
-        _putch(c);
-        if(c!=8) //8 is backspace
-        {
-            ++x;
+        COORD last_c;
+        if(c!=-32) //arrow key not pressed
+        { 
+            if(c==27) break;
+            _putch(c);
+            if(c!=8) //8 is backspace
+            {
+                last_c = wherexy();
+                root = root->next[c-'a'] != NULL ? root->next[c-'a'] : root;
+            }
+            else
+            {
+                _putch(' ');
+                _putch(8);
+                last_c = wherexy();
+                root = root->parent != NULL ? root->parent : root;
+            }
             
-            tco = wherexy();
-            if(root!=NULL) root = root->next[c-'a'];
+            //clear output area
+            for(int i=0; i<h-7; ++i)
+            {
+                gotoxy(_cord(out_cord.X, out_cord.Y+i));
+                for(int j=0; j<w-4; ++j) _putch(' ');
+            }
+
+            //walk and display
+            freeCL(cl);
+            x=0;
+            cl = trieWalk(root);
+            if(cl!=NULL)
+            {
+                CLink *ctmp = cl;
+                do 
+                {
+                    gotoxy(_cord(out_cord.X+1, out_cord.Y+(x++)));
+                    printf("%s", ctmp->c->name);
+                    ctmp = ctmp->next;
+                }while(ctmp != cl && x<windo);
+            }
+            else
+            {
+                //clear output area
+                for(int i=0; i<h-7; ++i)
+                {
+                    gotoxy(_cord(out_cord.X, out_cord.Y+i));
+                    for(int j=0; j<w-4; ++j) _putch(' ');
+                }
+            }
         }
-        else
+        else //arrow key pressed
         {
-            --x;
-            _putch(' ');
-            _putch(8);
-            tco = wherexy();
-            root = root->parent;
+            if(cl!=NULL)
+            {
+                CLink *ctmp = cl;
+                int chc=0;
+                arrow(out_cord.X, out_cord.Y+chc);
+                while(1)
+                {
+                    char aro = _getch();
+                    if(aro == 72 && chc-1>=0) //up arrow
+                    {
+                        chc--;
+                        ctmp = ctmp->prev;
+                    }
+                    else if(aro == 80 && chc+1<x) //down arrow
+                    {
+                        chc = chc + 1;
+                        ctmp = ctmp->next;
+                    }
+                    _putch(' ');
+                    arrow(out_cord.X, out_cord.Y+chc);
+                    aro = _getch();
+                    if(aro == -32) continue;
+                    else if(aro == 13)
+                    {
+                        Contact *tct = ctmp->c;
+                        freeCL(cl);
+                        return tct;
+                    }
+                    else if(aro == 27) break;
+                }
+            }
+            else _getch(); //remove arrow from buffer
         }
-        for(int i=0; i<h-7; ++i)
-        {
-            gotoxy(_cord(pos.X+2, pos.Y+5+i));
-            for(int j=0; j<w-4; ++j) _putch(' ');
-        }
-        int x = getN(4, root, _cord(pos.X+2, pos.Y+5));
-        gotoxy(tco);
+        
+        //back to input box
+        gotoxy(last_c);
     }
-    
+
+    //cleaning CLink space
+    freeCL(cl);
+    return NULL;
 }
 
-int getN(int n, TNode *root, COORD pos)
+CLink* trieWalk(TNode *root)
 {
-    if(root == NULL) return n;
-    gotoxy(pos);
+    if(root == NULL) return NULL;
+    CLink *head=NULL;
     if(root->ct != NULL) {
-        printf("%s", root->ct->name);
-        gotoxy(_cord(pos.X, pos.Y+1));
-        --n;
+        head = malloc(sizeof(CLink));
+        head->c = root->ct;
+        head->next = head;
+        head->prev = head;
     }
-    if(n==0) return n;
     for(int i=0; i<27; ++i)
     {
-        n = getN(n, root->next[i], wherexy());
-        if(n == 0) break;
+        CLink *t = trieWalk(root->next[i]);
+        if(t!=NULL)
+        {
+            if(head == NULL) head = t;
+            else
+            {
+                head->prev->next = t;
+                t->prev->next = head;
+                CLink *ctmp = head->prev;
+                head->prev = t->prev;
+                t->prev=ctmp;
+            }
+        }
     }
-    return n;
+    return head;
+}
+
+void freeCL(CLink *cl)
+{
+    if(cl == NULL) return;
+    CLink *ctmp = cl;
+    do 
+    {
+        CLink *nxt = ctmp->next;
+        free(ctmp);
+        ctmp = nxt;
+    }while(ctmp != cl);
 }
