@@ -9,4 +9,10 @@ typedef union
     int i;
 } Value;
 
+typedef struct DLL
+{
+    struct DLL *next;
+    struct DLL *prev;
+} DLL;
+
 #endif //HELPER_H

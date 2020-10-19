@@ -168,9 +168,18 @@ void xinput(char *s)
     {
         c = _getch();
         if(c==13) break;
-        *s = c;
-        _putch(c);
-        s++;
+        else if(c!=8)
+        {    
+            *s = c;
+            _putch(c);
+            s++;
+        }
+        else
+        {
+            s--;
+            _putch(' ');
+            _putch(8);
+        }    
     }
     *s = '\0'; 
 }
