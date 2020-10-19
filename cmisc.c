@@ -167,11 +167,11 @@ void xinput(char *s)
     while(1)
     {
         c = _getch();
+        _putch(c);
         if(c==13) break;
         else if(c!=8)
         {    
             *s = c;
-            _putch(c);
             s++;
         }
         else
