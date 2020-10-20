@@ -11,15 +11,12 @@ int main()
     COORD wSize = getWindowSize(), zz;
     zz.X = zz.Y = 0;
     drawBox(&dlBox, wSize.X, wSize.Y, zz);
-    // char *l[] = {"Hello", "World", "2020"};
-    // COORD fp = {1,1};
-    // FormData *f = form(l, 3, fp);
 
     //---Menu
-    char *mItems[] = { "Add", "List", "Modify", "Delete", "Search" };
+    char *mItems[] = { "Add", "Modify", "Delete", "Search" };
     char *labels[] = {"Name", "Address", "Mobile"};
 
-    short n = 5;
+    short n = 4;
     drawBox(&slBox, 11, n+6, _cord(1,1));
     printf("Menu");
     hLine(_cord(2,3), 9);
@@ -49,9 +46,13 @@ int main()
             case 0:
                 addContact(labels, 3, &root, _cord(12, 1));
                 break;
-            case 4:
+            case 2:
                 gotoxy(_cord(12,1));
-                Contact *ct = search(&root);
+                search(&root, deleteContact);
+                break;
+            case 3:
+                gotoxy(_cord(12,1));
+                Contact *ct = search(&root, NULL);
                 if(ct != NULL) printf("%s, %s, %s", ct->name, ct->address, ct->mobile);
                 break;
             default:

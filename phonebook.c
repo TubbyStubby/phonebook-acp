@@ -43,7 +43,7 @@ short addContact(char **l, int n, TNode *root, COORD cord)
     else return 1;    
 }
 
-Contact* search(TNode *root)
+Contact* search(TNode *root, void (*modifier)(Contact**))
 {
     short w=30, h=15;
     COORD pos = wherexy();
@@ -96,7 +96,7 @@ Contact* search(TNode *root)
                 do 
                 {
                     gotoxy(_cord(out_cord.X+1, out_cord.Y+(x++)));
-                    printf("%s", ctmp->c->name);
+                    printf("%s", (*(ctmp->c))->name);
                     ctmp = ctmp->next;
                 }while(ctmp != cl && x<windo);
             }
@@ -136,9 +136,18 @@ Contact* search(TNode *root)
                     if(aro == -32) continue;
                     else if(aro == 13)
                     {
-                        Contact *tct = ctmp->c;
-                        freeCL(cl);
-                        return tct;
+                        if(modifier==NULL) 
+                        {
+                            Contact *tct = *(ctmp->c);
+                            freeCL(cl);
+                            return tct;
+                        }
+                        else
+                        {
+                            modifier(ctmp->c);
+                            freeCL(ctmp);
+                            return NULL;
+                        }
                     }
                     else if(aro == 27) break;
                 }
@@ -161,7 +170,7 @@ CLink* trieWalk(TNode *root)
     CLink *head=NULL;
     if(root->ct != NULL) {
         head = malloc(sizeof(CLink));
-        head->c = root->ct;
+        head->c = &(root->ct);
         head->next = head;
         head->prev = head;
     }
@@ -194,4 +203,12 @@ void freeCL(CLink *cl)
         free(ctmp);
         ctmp = nxt;
     }while(ctmp != cl);
+}
+
+void deleteContact(Contact **ct)
+{
+    Contact *dref = *ct;
+    printf(dref->name);
+    free(dref);
+    *ct = NULL;
 }

@@ -16,7 +16,7 @@ typedef struct
 
 typedef struct CLink
 {
-    Contact *c;
+    Contact **c;
     struct CLink *next;
     struct CLink *prev;
 } CLink;
@@ -32,11 +32,17 @@ typedef struct TrieNode
 short addContact(char**, int, TNode*,COORD);
 
 //searches and reutrns a contact
-Contact* search(TNode*);
+Contact* search(TNode*, void (*modifier)(Contact**));
 
 //returns circular ll
 CLink* trieWalk(TNode*);
 
 void freeCL(CLink*);
+
+//delete
+void deleteContact(Contact**);
+
+//modify
+void modifyContact(Contact**);
 
 #endif
