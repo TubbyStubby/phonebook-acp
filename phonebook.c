@@ -144,9 +144,10 @@ Contact* search(TNode *root, void (*modifier)(Contact**))
                         }
                         else
                         {
+                            gotoxy(_cord(pos.X + w, pos.Y));
                             modifier(ctmp->c);
                             freeCL(ctmp);
-                            return NULL;
+                            break;
                         }
                     }
                     else if(aro == 27) break;
@@ -207,8 +208,36 @@ void freeCL(CLink *cl)
 
 void deleteContact(Contact **ct)
 {
+    COORD pos = wherexy();
+    gotoxy(pos);
+    char *a[] = {"Confirm", "Cancel"};
+    int x = aroSelect(a, 2);
     Contact *dref = *ct;
-    printf(dref->name);
-    free(dref);
-    *ct = NULL;
+    switch (x)
+    {
+    case 0:
+        free(dref);
+        *ct = NULL;
+        break;
+    }
+}
+
+void modifyContact(Contact **ct)
+{
+    char *lbls[] = {"Name", "Address", "Mobile"};
+    COORD pos = wherexy();
+    FormData *f = form(lbls, 3, pos);
+    gotoxy(pos);
+    char *a[] = {"Confirm", "Cancel"};
+    int x = aroSelect(a, 2);
+    switch (x)
+    {
+    case 0:
+        if(f->data.s[0] != '\0') strcpy((*ct)->name, f->data.s);
+        f++;
+        if(f->data.s[0] != '\0') strcpy((*ct)->address, f->data.s);
+        f++;
+        if(f->data.s[0] != '\0') strcpy((*ct)->mobile, f->data.s);
+        break;
+    }
 }

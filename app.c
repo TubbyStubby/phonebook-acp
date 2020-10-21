@@ -46,6 +46,10 @@ int main()
             case 0:
                 addContact(labels, 3, &root, _cord(12, 1));
                 break;
+            case 1:
+                gotoxy(_cord(12,1));
+                search(&root, modifyContact);
+                break;
             case 2:
                 gotoxy(_cord(12,1));
                 search(&root, deleteContact);

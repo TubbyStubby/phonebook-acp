@@ -7,6 +7,7 @@
 #include "helper.h"
 #define pchar(x) printf("%c", x)
 #define _cord(x,y) (COORD){x,y} //short hand for new COORD
+#define arrow(x, y) gotoxy(_cord(x,y));putch('>');gotoxy(_cord(x,y))
 
 //stores form data which can either be string or integer
 typedef struct
@@ -71,6 +72,9 @@ void xinput(char*);
 void vLine(COORD, int);
 //makes a horizontal line
 void hLine(COORD, int);
+
+//makes a arrow selectable menu
+int aroSelect(char**, int);
 
 //standard box with double line
 extern const Box dlBox;

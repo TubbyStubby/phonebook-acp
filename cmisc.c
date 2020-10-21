@@ -183,3 +183,33 @@ void xinput(char *s)
     }
     *s = '\0'; 
 }
+
+int aroSelect(char **mi, int n)
+{
+    int ch = 0;
+    char c = ' ';
+    
+    COORD pos = wherexy();
+    for(int i=0; i<n; i++)
+    {
+        gotoxy(_cord(pos.X+1, pos.Y+i));
+        printf(mi[i]);
+    }
+
+    arrow(pos.X, pos.Y);
+
+    while(1)
+    {
+        c = _getch();
+        if(c==-32) //arrow key pressed
+        {
+            c = _getch(); //get the arrow key
+            if(c == 72) ch = ch - 1 < 0 ? n-1 : ch - 1; //up arrow
+            else if(c == 80) ch = (ch + 1) % n; //down arrow
+            putch(' ');
+            arrow(pos.X, pos.Y+ch);
+        }
+        if(c==13) return ch;
+        if(c==27) return -1;
+    }
+}

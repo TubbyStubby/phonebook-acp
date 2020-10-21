@@ -3,8 +3,6 @@
 
 #include "cmisc.h"
 
-#define arrow(x, y) gotoxy(_cord(x,y));putch('>');gotoxy(_cord(x,y))
-
 typedef struct
 {
     char *name;
