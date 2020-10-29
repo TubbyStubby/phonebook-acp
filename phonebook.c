@@ -2,26 +2,33 @@
 
 short addContact(char **l, int n, TNode *root, COORD cord)
 {
-    FormData *f;
-    f = form(l,n,cord);
+    FormData *f = NULL;
+    if(n!=-1) 
+    {
+        f = form(l,n,cord);
+        if(f==NULL) return 2; //canceled
+    }
 
     TNode *t = root;
-    char *s = f->data.s;
+    char *s = n==-1 ? l[0] : f->data.s;
 
     while(*s != '\0')
     {
-        if(t->next[*s - 'a'] == NULL)
+        int spcchk;
+        if(*s == ' ') spcchk = 26;
+        else spcchk = *s - 'a';
+        if(t->next[spcchk] == NULL)
         {
             TNode *new = malloc(sizeof(TNode));
             new->ct = NULL;
             for(int i=0; i<27; i++) new->next[i] = NULL;
             new->parent = t;
             new->val = *s;
-            t->next[*s - 'a'] = new;
+            t->next[spcchk] = new;
         }
         else
         {
-            t = t->next[*s - 'a'];
+            t = t->next[spcchk];
             s++;
         }
     }
@@ -32,11 +39,13 @@ short addContact(char **l, int n, TNode *root, COORD cord)
         ct->address = malloc(sizeof(char)*20);
         ct->name = malloc(sizeof(char)*20);
         ct->mobile = malloc(sizeof(char)*20);
-        strcpy(ct->address, f[1].data.s);
-        strcpy(ct->name, f[0].data.s);
-        strcpy(ct->mobile, f[2].data.s);
+        strcpy(ct->address, n==-1?l[1]:f[1].data.s);
+        strcpy(ct->name, n==-1?l[0]:f[0].data.s);
+        strcpy(ct->mobile, n==-1?l[2]:f[2].data.s);
 
         t->ct = ct;
+
+        if(f!=NULL) saveToFile(ct, SAVE_FILE);
 
         return 0;
     }
@@ -64,12 +73,15 @@ Contact* search(TNode *root, void (*modifier)(Contact**))
         COORD last_c;
         if(c!=-32) //arrow key not pressed
         { 
-            if(c==27) break;
+            if(c==27) break; //esc key
             _putch(c);
             if(c!=8) //8 is backspace
             {
                 last_c = wherexy();
-                root = root->next[c-'a'] != NULL ? root->next[c-'a'] : root;
+                int spcchk;
+                if(c==' ') spcchk = 26;
+                else spcchk = c-'a';
+                root = root->next[spcchk] != NULL ? root->next[spcchk] : root;
             }
             else
             {
@@ -162,6 +174,7 @@ Contact* search(TNode *root, void (*modifier)(Contact**))
 
     //cleaning CLink space
     freeCL(cl);
+    clearArea(pos);
     return NULL;
 }
 
@@ -208,10 +221,12 @@ void freeCL(CLink *cl)
 
 void deleteContact(Contact **ct)
 {
+    deleteFileRecord(*ct, SAVE_FILE);
     COORD pos = wherexy();
     gotoxy(pos);
     char *a[] = {"Confirm", "Cancel"};
     int x = aroSelect(a, 2);
+    clearArea(pos);
     Contact *dref = *ct;
     switch (x)
     {
@@ -224,12 +239,15 @@ void deleteContact(Contact **ct)
 
 void modifyContact(Contact **ct)
 {
+    char oldName[20];
+    strcpy(oldName, (*ct)->name);
     char *lbls[] = {"Name", "Address", "Mobile"};
     COORD pos = wherexy();
     FormData *f = form(lbls, 3, pos);
     gotoxy(pos);
     char *a[] = {"Confirm", "Cancel"};
     int x = aroSelect(a, 2);
+    clearArea(pos);
     switch (x)
     {
     case 0:
@@ -238,6 +256,117 @@ void modifyContact(Contact **ct)
         if(f->data.s[0] != '\0') strcpy((*ct)->address, f->data.s);
         f++;
         if(f->data.s[0] != '\0') strcpy((*ct)->mobile, f->data.s);
+        updateFileRecord(oldName,*ct, SAVE_FILE);
         break;
     }
+}
+
+int saveToFile(Contact *ct, char *fname)
+{
+    FILE *fo = fopen(fname, "a");
+    if(fo == NULL) return 1;
+    else
+    {
+        fprintf(fo, "%s\n%s\n%s\n", ct->name, ct->address, ct->mobile);
+        fclose(fo);
+    }
+    return 0;
+}
+
+int updateFileRecord(char *oldName, Contact *ct, char *fname)
+{
+    FILE *fw = fopen("temp.txt", "w");
+    FILE *fr = fopen(fname, "r");
+    if(fr == NULL || fw == NULL) return 1;
+    else
+    {
+        char str[20];
+        while(1)
+        {
+            long cpos = ftell(fr);
+            if(fscanf(fr, "%s", str) == EOF) break;
+            if(strcmp(str, oldName))
+            {
+                fseek(fr, cpos, SEEK_SET);
+                for(int i=0; i<3; i++)
+                {
+                    fscanf(fr, "%s", str);
+                    fputs(str, fw);
+                    fputc('\n', fw);
+                }
+            }
+            else
+            {
+                fscanf(fr, "%s", str);
+                fscanf(fr, "%s", str);
+                fputs(ct->name, fw); fputc('\n', fw);
+                fputs(ct->address, fw); fputc('\n', fw);
+                fputs(ct->mobile, fw); fputc('\n', fw);
+            }
+        }
+    }
+    fclose(fr);
+    fclose(fw);
+    remove(fname);
+    rename("temp.txt", fname);
+    return 0;
+}
+
+int deleteFileRecord(Contact *ct, char *fname)
+{
+    FILE *fw = fopen("temp.txt", "w");
+    FILE *fr = fopen(fname, "r");
+    if(fr == NULL || fw == NULL) return 1;
+    else
+    {
+        char str[20];
+        while(1)
+        {
+            long cpos = ftell(fr);
+            if(fscanf(fr, "%s", str) == EOF) break;
+            if(strcmp(str, ct->name))
+            {
+                fseek(fr, cpos, SEEK_SET);
+                for(int i=0; i<3; i++)
+                {
+                    fscanf(fr, "%s", str);
+                    fputs(str, fw);fputc('\n', fw);
+                }
+            }
+            else
+            {
+                fscanf(fr, "%s", str);
+                fscanf(fr, "%s", str);
+            }
+        }
+    }
+    fclose(fr);
+    fclose(fw);
+    remove(fname);
+    rename("temp.txt", fname);
+    return 0;
+}
+
+int loadContacts(TNode *root, char *fname)
+{
+    FILE *fr = fopen(fname, "r");
+    if(fr == NULL) return 1;
+    char *str[3];
+    for(int i=0; i<3; i++) str[i] = (char*)malloc(sizeof(char)*20);
+    while(1)
+    {
+        int f = 0;
+        for(int i=0;i<3;i++) 
+        {
+            if(fscanf(fr, "%s", str[i]) == EOF)
+            {  
+                f=1;
+                break;
+            }
+        }
+        if(f==0) addContact(str, -1, root, _cord(-1,-1));
+        else break;
+    }
+    fclose(fr);
+    return 0;
 }

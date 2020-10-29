@@ -2,6 +2,9 @@
 #define PHONEBOOK_H
 
 #include "cmisc.h"
+#include "stdlib.h"
+
+#define SAVE_FILE "contacts.txt"
 
 typedef struct
 {
@@ -42,5 +45,17 @@ void deleteContact(Contact**);
 
 //modify
 void modifyContact(Contact**);
+
+//append the contact in the file
+int saveToFile(Contact*, char*);
+
+//to update, with, in file
+int updateFileRecord(char*, Contact*, char*);
+
+//to delete in file
+int deleteFileRecord(Contact*, char*);
+
+//trie root, filename
+int loadContacts(TNode*, char*);
 
 #endif

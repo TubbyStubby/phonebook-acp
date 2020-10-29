@@ -52,6 +52,11 @@ clears the box of given width and height
 */
 void clearBox(int, int, COORD);
 
+/*
+clears the area from current pos to the right and bottom boundaries
+*/
+void clearArea(COORD);
+
 //just for fun hehe and testing
 void freeRoam(void);
 
@@ -66,7 +71,7 @@ FormData* form(char**, int, COORD); //change to formdata
 return string ending with \n
 without going to new line
 */
-void xinput(char*);
+int xinput(char*);
 
 //makes a vertical line
 void vLine(COORD, int);

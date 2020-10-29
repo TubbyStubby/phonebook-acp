@@ -83,6 +83,17 @@ void clearBox(int w, int h, COORD stpos)
     } while (cc.X != stpos.X || cc.Y != stpos.Y);
 }
 
+void clearArea(COORD pos)
+{
+    COORD winSize = getWindowSize();
+    for(int i = pos.Y; i < winSize.Y-1; i++)
+    {
+        gotoxy(_cord(pos.X, i));
+        for(int j = pos.X; j < winSize.X-1; j++)
+            _putch(' ');
+    }
+}
+
 FormData* form(char** labels, int n, COORD pos)
 {
     short labelW = 15, inputW = 15;
@@ -97,13 +108,14 @@ FormData* form(char** labels, int n, COORD pos)
     vLine(_cord(pos.X+10, pos.Y+1), n*2+1);
 
     FormData *f = (FormData*)malloc(sizeof(FormData)*n);
-
+    int flag = 0;
     for(int i=0; i<n; ++i)
     {
         gotoxy(_cord(pos.X+11, pos.Y+1+i*2));
         drawBox(&slBox, 15, 3, wherexy());
         f[i].t = str;
-        xinput(f[i].data.s);
+        if(xinput(f[i].data.s) == 1) //cancel
+        { flag = 1; break; }
         clearBox(15, 3, _cord(pos.X+11, pos.Y+1+i*2));
     }
 
@@ -115,6 +127,7 @@ FormData* form(char** labels, int n, COORD pos)
         }
     }
 
+    if(flag == 1) return NULL;
     return f;
 }
 
@@ -161,7 +174,7 @@ void freeRoam()
     }
 }
 
-void xinput(char *s)
+int xinput(char *s)
 {
     char c = ' ';
     while(1)
@@ -169,6 +182,7 @@ void xinput(char *s)
         c = _getch();
         _putch(c);
         if(c==13) break;
+        else if(c==27) return 1; //cancel
         else if(c!=8)
         {    
             *s = c;
@@ -181,7 +195,8 @@ void xinput(char *s)
             _putch(8);
         }    
     }
-    *s = '\0'; 
+    *s = '\0';
+    return 0;
 }
 
 int aroSelect(char **mi, int n)
