@@ -28,6 +28,7 @@ int main()
     char ch = ' ';
     short mi = 0;
     arrow(2,5);
+    loadContacts(&root, SAVE_FILE);
     while(1)
     {
         ch = _getch();

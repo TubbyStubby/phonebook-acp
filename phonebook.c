@@ -42,7 +42,6 @@ short addContact(char **l, int n, TNode *root, COORD cord)
         strcpy(ct->address, n==-1?l[1]:f[1].data.s);
         strcpy(ct->name, n==-1?l[0]:f[0].data.s);
         strcpy(ct->mobile, n==-1?l[2]:f[2].data.s);
-
         t->ct = ct;
 
         if(f!=NULL) saveToFile(ct, SAVE_FILE);
@@ -284,21 +283,26 @@ int updateFileRecord(char *oldName, Contact *ct, char *fname)
         while(1)
         {
             long cpos = ftell(fr);
-            if(fscanf(fr, "%s", str) == EOF) break;
+            fgets(str, 20, fr);
+            str[strlen(str)-1] = '\0';
+            if(feof(fr)) break;
             if(strcmp(str, oldName))
             {
                 fseek(fr, cpos, SEEK_SET);
                 for(int i=0; i<3; i++)
                 {
-                    fscanf(fr, "%s", str);
+                    fgets(str, 20, fr);
+                    str[strlen(str)-1] = '\0';
                     fputs(str, fw);
                     fputc('\n', fw);
                 }
             }
             else
             {
-                fscanf(fr, "%s", str);
-                fscanf(fr, "%s", str);
+                fgets(str, 20, fr);
+                str[strlen(str)-1] = '\0';
+                fgets(str, 20, fr);
+                str[strlen(str)-1] = '\0';
                 fputs(ct->name, fw); fputc('\n', fw);
                 fputs(ct->address, fw); fputc('\n', fw);
                 fputs(ct->mobile, fw); fputc('\n', fw);
@@ -323,20 +327,25 @@ int deleteFileRecord(Contact *ct, char *fname)
         while(1)
         {
             long cpos = ftell(fr);
-            if(fscanf(fr, "%s", str) == EOF) break;
+            fgets(str, 20, fr);
+            str[strlen(str)-1] = '\0';
+            if(feof(fr)) break;
             if(strcmp(str, ct->name))
             {
                 fseek(fr, cpos, SEEK_SET);
                 for(int i=0; i<3; i++)
                 {
-                    fscanf(fr, "%s", str);
+                    fgets(str, 20, fr);
+                    str[strlen(str)-1] = '\0';
                     fputs(str, fw);fputc('\n', fw);
                 }
             }
             else
             {
-                fscanf(fr, "%s", str);
-                fscanf(fr, "%s", str);
+                fgets(str, 20, fr);
+                str[strlen(str)-1] = '\0';
+                fgets(str, 20, fr);
+                str[strlen(str)-1] = '\0';
             }
         }
     }
@@ -358,7 +367,9 @@ int loadContacts(TNode *root, char *fname)
         int f = 0;
         for(int i=0;i<3;i++) 
         {
-            if(fscanf(fr, "%s", str[i]) == EOF)
+            fgets(str[i], 20, fr);
+            str[i][strlen(str[i])-1] = '\0';
+            if(feof(fr))
             {  
                 f=1;
                 break;
