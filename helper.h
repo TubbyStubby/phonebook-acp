@@ -9,6 +9,7 @@ typedef union
     int i;
 } Value;
 
+//todo: need to make it generic using null*
 typedef struct DLL
 {
     struct DLL *next;
